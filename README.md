@@ -1,2 +1,3 @@
-# colorz
-A JavaScript library for converting web color formats
+# colorz.js
+
+A JavaScript library for converting web color formats and testing contrast ratios...
