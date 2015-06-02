@@ -55,11 +55,33 @@ var colorz = window.colorz = {
             return this.getContrastRatio(color1, color2) >= 7;
         }
     },
+    // 2 char hex to number e.g. "9B" => 155
+    hexToColor: function (c) {
+        return parseInt(c, 16);
+    },    
     // 0 - 255 => 2 char hex e.g. 155 => "9B"
     colorToHex: function (c) {
-        var hex = c.toString(16);
+        var hex = Math.round(c).toString(16);
         return hex.length === 1 ? "0" + hex : hex;
     },
+    // Mix 2 colors together
+    mixColors: function(color1, alpha1, color2, alpha2){
+        
+        if (typeof alpha1 === "undefined") { alpha1 = 1; }
+        if (typeof alpha2 === "undefined") { alpha2 = 1; }
+
+        var rgb1 = this.hexToRgb(color1);
+        var rgb2 = this.hexToRgb(color2);
+        
+        // Alpha is calculated with alpha = c1.a * (1 - c2.a) + c2.a, but that will always be 1 if either alpha value is 1
+        var result = { };
+        result.r = rgb1.r * alpha1 * (1 - alpha2) + rgb2.r * alpha2; 
+        result.g = rgb1.g * alpha1 * (1 - alpha2) + rgb2.g * alpha2; 
+        result.b = rgb1.b * alpha1 * (1 - alpha2) + rgb2.b * alpha2; 
+        
+        return this.rgbToHex(result.r, result.g, result.b);
+        
+    }, 
     // Alpha hex value to alpha decimal 
     // e.g. "BF" => 0.75
     alphaHexToAlphaDecimal: function (hex) {
