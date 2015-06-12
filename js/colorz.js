@@ -65,19 +65,19 @@ var colorz = window.colorz = {
         return hex.length === 1 ? "0" + hex : hex;
     },
     // Mix 2 colors together
-    mixColors: function(color1, alpha1, color2, alpha2){
+    mixColors: function(color1, color2, range){
         
-        if (typeof alpha1 === "undefined") { alpha1 = 1; }
-        if (typeof alpha2 === "undefined") { alpha2 = 1; }
+        // range [0-1] is the point along the spectrum of midpoints. 0 is entirely color1, 1 is entirely color2
+        if (typeof range === "undefined") { range = 0.5; }
+        if (typeof range === "undefined") { range = 0.5; }
 
         var rgb1 = this.hexToRgb(color1);
         var rgb2 = this.hexToRgb(color2);
         
-        // Alpha is calculated with alpha = c1.a * (1 - c2.a) + c2.a, but that will always be 1 if either alpha value is 1
         var result = { };
-        result.r = rgb1.r * alpha1 * (1 - alpha2) + rgb2.r * alpha2; 
-        result.g = rgb1.g * alpha1 * (1 - alpha2) + rgb2.g * alpha2; 
-        result.b = rgb1.b * alpha1 * (1 - alpha2) + rgb2.b * alpha2; 
+        result.r = rgb1.r + range * (rgb2.r - rgb1.r);
+        result.g = rgb1.g + range * (rgb2.g - rgb1.g);
+        result.b = rgb1.b + range * (rgb2.b - rgb1.b);
         
         return this.rgbToHex(result.r, result.g, result.b);
         
@@ -157,7 +157,94 @@ var colorz = window.colorz = {
             g: parseInt(result[2], 16),
             b: parseInt(result[3], 16)
         } : {};
+    },
+    
+    labToRgb: function(obj){
+        
+        var xyz = this.labToXyz(obj);
+        var rgb = this.xyzToRgb(xyz);
+        return rgb;
+    },
+
+    labToXyz: function (lab) {
+        var l = lab.l,
+        a = lab.a,
+        b = lab.b,
+        x, y, z, y2;
+
+        if (l <= 8) {
+            y = (l * 100) / 903.3;
+            y2 = (7.787 * (y / 100)) + (16 / 116);
+        } else {
+            y = 100 * Math.pow((l + 16) / 116, 3);
+            y2 = Math.pow(y / 100, 1/3);
+        }
+
+        x = x / 95.047 <= 0.008856 ? x = (95.047 * ((a / 500) + y2 - (16 / 116))) / 7.787 : 95.047 * Math.pow((a / 500) + y2, 3);
+        z = z / 108.883 <= 0.008859 ? z = (108.883 * (y2 - (b / 200) - (16 / 116))) / 7.787 : 108.883 * Math.pow(y2 - (b / 200), 3);
+
+        return {x: x, y: y, z: z};
+    },
+
+    xyzToRgb: function(xyz){
+        var x = xyz.x / 100,
+            y = xyz.y / 100,
+            z = xyz.z / 100,
+            r, g, b;
+
+        r = (x * 3.2406) + (y * -1.5372) + (z * -0.4986);
+        g = (x * -0.9689) + (y * 1.8758) + (z * 0.0415);
+        b = (x * 0.0557) + (y * -0.2040) + (z * 1.0570);
+
+        // assume sRGB
+        r = r > 0.0031308 ? ((1.055 * Math.pow(r, 1.0 / 2.4)) - 0.055) : r = (r * 12.92);
+        g = g > 0.0031308 ? ((1.055 * Math.pow(g, 1.0 / 2.4)) - 0.055) : g = (g * 12.92);
+        b = b > 0.0031308 ? ((1.055 * Math.pow(b, 1.0 / 2.4)) - 0.055) : b = (b * 12.92);
+
+        r = Math.min(Math.max(0, r), 1);
+        g = Math.min(Math.max(0, g), 1);
+        b = Math.min(Math.max(0, b), 1);
+
+        return {r: r * 255, g: g * 255, b: b * 255};
+    },
+
+    rgbToXyz: function(obj) {
+        var r = obj.r / 255, g = obj.g / 255, b = obj.b / 255;
+
+        // assume sRGB
+        r = r > 0.04045 ? Math.pow(((r + 0.055) / 1.055), 2.4) : (r / 12.92);
+        g = g > 0.04045 ? Math.pow(((g + 0.055) / 1.055), 2.4) : (g / 12.92);
+        b = b > 0.04045 ? Math.pow(((b + 0.055) / 1.055), 2.4) : (b / 12.92);
+
+        var x = (r * 0.4124) + (g * 0.3576) + (b * 0.1805);
+        var y = (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
+        var z = (r * 0.0193) + (g * 0.1192) + (b * 0.9505);
+
+        return {x: x * 100, y: y *100, z: z * 100};
+    },
+
+    rgbToLab: function(obj) {
+        var xyz = this.rgbToXyz(obj),
+              x = xyz.x,
+              y = xyz.y,
+              z = xyz.z,
+              l, a, b;
+
+        x /= 95.047;
+        y /= 100;
+        z /= 108.883;
+
+        x = x > 0.008856 ? Math.pow(x, 1 / 3) : (7.787 * x) + (16 / 116);
+        y = y > 0.008856 ? Math.pow(y, 1 / 3) : (7.787 * y) + (16 / 116);
+        z = z > 0.008856 ? Math.pow(z, 1 / 3) : (7.787 * z) + (16 / 116);
+
+        l = (116 * y) - 16;
+        a = 500 * (x - y);
+        b = 200 * (y - z);
+
+        return { l: l, a: a, b: b };
     }
+    
 };
 
 
