@@ -65,22 +65,24 @@ var colorz = window.colorz = {
         return hex.length === 1 ? "0" + hex : hex;
     },
     // Mix 2 colors together
-    mixColors: function(color1, color2, range){
+    mixColors: function (c1, c2) {
         
-        // range [0-1] is the point along the spectrum of midpoints. 0 is entirely color1, 1 is entirely color2
-        if (typeof range === "undefined") { range = 0.5; }
-        if (typeof range === "undefined") { range = 0.5; }
+        // make sure we have an object { r: 255, g: 255, b: 255, a: 0.5 }
+        if (typeof c1 !== "object") { c1 = this.hexToRgb(c1); }
+        if (typeof c2 !== "object") { c2 = this.hexToRgb(c2); }
 
-        var rgb1 = this.hexToRgb(color1);
-        var rgb2 = this.hexToRgb(color2);
-        
-        var result = { };
-        result.r = rgb1.r + range * (rgb2.r - rgb1.r);
-        result.g = rgb1.g + range * (rgb2.g - rgb1.g);
-        result.b = rgb1.b + range * (rgb2.b - rgb1.b);
-        
-        return this.rgbToHex(result.r, result.g, result.b);
-        
+        // if no alpha property set to 1
+        if (typeof c1.a === "undefined") { c1.a = 1; } 
+        if (typeof c2.a === "undefined") { c2.a = 1; }
+
+        var a = c1.a + c2.a * (1-c1.a);
+        var obj = {
+            r: (c1.r * c1.a + c2.r * c2.a * (1 - c1.a)) / a,
+            g: (c1.g * c1.a + c2.g * c2.a * (1 - c1.a)) / a,
+            b: (c1.b * c1.a + c2.b * c2.a * (1 - c1.a)) / a,
+            a: a
+        };
+        return this.rgbToHex(obj.r, obj.g, obj.b);
     }, 
     // Alpha hex value to alpha decimal 
     // e.g. "BF" => 0.75
