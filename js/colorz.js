@@ -55,6 +55,26 @@ var colorz = window.colorz = {
             return this.getContrastRatio(color1, color2) >= 7;
         }
     },
+    // amt = -0.2 for 20% darker, 0.2 for 20% lighter
+    adjustColor: function(hex, lum) {
+
+        // validate hex string
+        hex = String(hex).replace(/[^0-9a-f]/gi, '');
+        if (hex.length < 6) {
+            hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+        }
+        lum = lum || 0;
+	
+        // convert to decimal and change luminosity
+        var rgb = "#", c, i;
+        for (i = 0; i < 3; i++) {
+            c = parseInt(hex.substr(i*2,2), 16);
+            c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+            rgb += ("00"+c).substr(c.length);
+        }
+
+        return rgb;
+    },
     // 2 char hex to number e.g. "9B" => 155
     hexToColor: function (c) {
         return parseInt(c, 16);
