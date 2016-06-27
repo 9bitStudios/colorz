@@ -55,6 +55,23 @@ var colorz = window.colorz = {
             return this.getContrastRatio(color1, color2) >= 7;
         }
     },
+
+    isValidHex: function(value) {
+        var regEx = /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i;
+        return regEx.test(value)
+    },
+
+    isValidRGB: function (value) {
+        var regEx = /rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)/;
+        return regEx.test(value)
+    },
+
+    isValidRGBA: function (value) {
+        var regEx = /rgba\((\d{1,3}), (\d{1,3}), (\d{1,3}), ([0-1]+(\.[0-9][0-9]?)?)\)/;
+        return regEx.test(value)
+    },
+
+
     // amt = -0.2 for 20% darker, 0.2 for 20% lighter
     adjustColor: function(hex, lum) {
 
